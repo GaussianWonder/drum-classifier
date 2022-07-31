@@ -2,6 +2,7 @@ from os import path as opath
 
 import librosa
 
+import preferences
 from files.file import File
 from numpy import number, ndarray
 
@@ -38,7 +39,12 @@ class SoundFile(File):
 
         :return: None
         """
-        samples, sample_rate = librosa.load(self.path)
+        samples, sample_rate = librosa.load(
+            self.path,
+            sr=preferences.SAMPLE_RATE,
+            mono=preferences.CONVERT_TO_MONO,
+            duration=preferences.MAX_DURATION,
+        )
         self.samples = samples
         self.sample_rate = sample_rate
         self.duration = float(len(samples)) / sample_rate
