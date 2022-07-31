@@ -1,6 +1,26 @@
 # Drum classifier model
 
-**This covers:**
+**This module provides:**
 
 - Feature extraction and preprocessing for audio samples
-- The model that classifies the processed result into a drum type.
+- Model training based on an `asset folder` and a `test folder`
+- Model versioning
+- File classification using a given trained model
+
+## CLI options
+
+*Input* and *Output* for all subcommands can also be read [here](./main.py)
+
+### Help
+
+**List subcommands:**
+
+```bash
+./main.py
+```
+
+**Seek arguments and flags:**
+
+```bash
+./main.py <subcommand> --help
+```
