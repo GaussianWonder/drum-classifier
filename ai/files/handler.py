@@ -1,16 +1,20 @@
 from glob import glob
 from os import path, getcwd, listdir
+from typing import TypeVar
+
+SelfDFH = TypeVar("SelfDFH", bound="DatasetFileHandler")
 
 
 class DatasetFileHandler:
     base_path: str = getcwd()
     categories: list[str]
 
-    def __init__(self, base_path: str):
+    def __init__(self: SelfDFH, base_path: str):
         if not path.exists(base_path) or not path.isdir(base_path):
             raise Exception('Folder {} does not exist!'.format(base_path))
         self.base_path = base_path
         self.categories = self.get_categories()
+        self.categories.sort()
 
     @classmethod
     def from_cwd(cls):
@@ -33,6 +37,9 @@ class DatasetFileHandler:
 
     def get_files_per_category(self):
         return get_paths(self.base_path, self.categories)
+
+    def is_compatible_with(self: SelfDFH, other: SelfDFH) -> bool:
+        return self.categories == other.categories
 
 
 def get_asset_categories(asset_path: str) -> list[str]:
