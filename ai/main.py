@@ -32,6 +32,13 @@ class Main(object):
         """
         pass
 
+    def list_models(self):
+        """List all trained models
+
+        :returns: prints a json containing an array of model identifiers
+        """
+        pass
+
 
 if __name__ == '__main__':
     fire.Fire(Main)

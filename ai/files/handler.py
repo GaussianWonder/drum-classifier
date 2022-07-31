@@ -2,6 +2,8 @@ from glob import glob
 from os import path, getcwd, listdir
 from typing import TypeVar
 
+from soundfile import SoundFile
+
 SelfDFH = TypeVar("SelfDFH", bound="DatasetFileHandler")
 
 
@@ -35,8 +37,20 @@ class DatasetFileHandler:
     def get_files(self):
         return get_files(self.base_path, self.categories)
 
+    def get_sounds(self):
+        return [
+            (category, SoundFile(p))
+            for (category, p) in self.get_files()
+        ]
+
     def get_files_per_category(self):
         return get_paths(self.base_path, self.categories)
+
+    def get_sounds_per_category(self):
+        return [
+            (category, [SoundFile(p) for p in paths])
+            for (category, paths) in self.get_files_per_category()
+        ]
 
     def is_compatible_with(self: SelfDFH, other: SelfDFH) -> bool:
         return self.categories == other.categories
