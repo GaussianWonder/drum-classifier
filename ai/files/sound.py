@@ -1,5 +1,3 @@
-from os import path as opath
-
 import librosa
 
 import preferences
@@ -25,14 +23,6 @@ class SoundFile(File):
     @classmethod
     def from_file(cls, file: File):
         return cls(file.path)
-
-    def get_path_labels(self) -> (str, str, list[str]):
-        # TODO make up a category plan when working with the dataset
-        # TODO check this and strip out details that are not relevant,
-        #   categories that are too complex mess up the training process
-        relpath = opath.relpath(self.path, "./assets")
-        labels = opath.dirname(relpath).split('/')
-        return labels[0], labels[-1], labels[1:-1]
 
     def load_sound(self):
         """Load the audio file and set relevant information

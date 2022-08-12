@@ -32,7 +32,7 @@ class Main(object):
         """
         pass
 
-    def list_models(self):
+    def list(self):
         """List all trained models
 
         :returns: prints a json containing an array of model identifiers

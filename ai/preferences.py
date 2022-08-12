@@ -5,4 +5,3 @@ CONVERT_TO_MONO = True
 MAX_DURATION = 2  # in seconds
 
 SAMPLE_RATE = 44100
-
