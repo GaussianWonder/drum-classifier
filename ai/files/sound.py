@@ -1,4 +1,5 @@
 import librosa  # type: ignore
+import numpy as np
 
 import preferences
 from files.file import File
@@ -39,7 +40,58 @@ class SoundFile(File):
 
         :return: bool
         """
-        return not(self.duration is 0 or self.sample_rate is 0 or not hasattr(self, 'samples'))
+        return not(self.duration <= 0 or self.sample_rate <= 0 or not hasattr(self, 'samples'))
+
+    def features(self) -> dict[str, ndarray]:
+        stft: ndarray = np.abs(librosa.stft(self.samples))
+
+        mfcc: ndarray = librosa.feature.mfcc(
+            y=self.samples,
+            sr=self.sample_rate,
+            n_mfcc=preferences.N_MFCC,
+        )
+
+        chroma: ndarray = librosa.feature.chroma_stft(
+            S=stft,
+            sr=self.sample_rate,
+        )
+        chroma_cens: ndarray = librosa.feature.chroma_cens(
+            y=self.samples,
+            sr=self.sample_rate
+        )
+
+        mel: ndarray = librosa.feature.melspectrogram(
+            y=self.samples,
+            sr=self.sample_rate,
+        )
+
+        contrast: ndarray = librosa.feature.spectral_contrast(
+            S=stft,
+            sr=self.sample_rate,
+        )
+        spectral_bandwidth: ndarray = librosa.feature.spectral_bandwidth(
+            y=self.samples,
+            sr=self.sample_rate,
+        )
+
+        tonnetz: ndarray = librosa.feature.tonnetz(
+            y=librosa.effects.harmonic(self.samples),
+            sr=self.sample_rate,
+        )
+
+        return {
+            'stft': stft,
+            'mfcc': mfcc,
+            'chroma': chroma,
+            'chroma_cens': chroma_cens,
+            'mel': mel,
+            'contrast': contrast,
+            'spectral_bandwidth': spectral_bandwidth,
+            'tonnetz': tonnetz,
+        }
+
+    def plot(self, features: dict[str, ndarray]):
+        pass
 
     def __enter__(self):
         self.load_sound()

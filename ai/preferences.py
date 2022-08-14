@@ -7,6 +7,8 @@ from numpy import ndarray
 CONVERT_TO_MONO = True
 MAX_DURATION = 2  # in seconds
 
+N_MFCC = 20
+
 SAMPLE_RATE = 44100
 
 # DEFAULT IMPLEMENTATIONS
