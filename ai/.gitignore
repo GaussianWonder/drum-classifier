@@ -2,7 +2,10 @@ assets/
 test_assets/
 process/
 temp/
+temp.py
 __pycache__/
 ./**/__pycache__/
 .idea/
 venv/
+split_transient.py
+.mypy_cache/*
