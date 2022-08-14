@@ -1,12 +1,12 @@
 from shutil import rmtree
-from typing import ClassVar, NoReturn, Any, Dict
+from typing import ClassVar, NoReturn, Dict
 
 import numpy as np
 from numpy import ndarray
 
 from files.processor import DatasetItemProcessor
 from files.file import File
-from os import path, makedirs, remove, listdir
+from os import path, makedirs, listdir
 import json
 
 from files.json import NpEncoder, NpDecoder
@@ -14,6 +14,8 @@ from files.sound import SoundFile
 
 ND_ARRAY_FIELDS = ['stft', 'mfcc', 'chroma', 'chroma_cens', 'mel', 'contrast', 'spectral_bandwidth', 'tonnetz']
 SPT = Dict[str, ndarray | int | float]
+
+# TODO see np.load and np.save, maybe `allow_pickle` should be False someday
 
 
 class SoundProcessor(DatasetItemProcessor[File, SPT]):
