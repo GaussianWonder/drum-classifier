@@ -24,6 +24,9 @@ class SoundProcessor(DatasetItemProcessor[File, SPT]):
     cache_dir: str
     # Cache working directory (takes into account versioning)
     cache_wd: str
+    # Plots are not always needed or queried, but when they are, cache them
+    # This also checks for plots on already (impartial) cached data
+    cache_plots: bool
 
     def raise_permission_error(self, reason: str) -> NoReturn:
         raise Exception('Not enough permission to {}'.format(reason))
@@ -31,10 +34,11 @@ class SoundProcessor(DatasetItemProcessor[File, SPT]):
     def cache_working_directory(self, cache_dir: str):
         return path.join(cache_dir, self.version)
 
-    def __init__(self, cache_dir: str):
+    def __init__(self, cache_dir: str, cache_plots: bool = False):
         super().__init__()
         self.cache_dir = cache_dir
         self.cache_wd = self.cache_working_directory(cache_dir)
+        self.cache_plots = cache_plots  # TODO plot and cache all plots
         if not path.exists(self.cache_wd) or not path.isdir(self.cache_wd):
             try:
                 makedirs(self.cache_wd)
