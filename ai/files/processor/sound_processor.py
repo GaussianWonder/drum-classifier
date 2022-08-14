@@ -1,12 +1,14 @@
 from typing import ClassVar, NoReturn
 
 from files.processor import DatasetItemProcessor
-from files.sound import SoundFile
+from files.file import File
 from os import path, makedirs
 import json
 
+from files.sound import SoundFile
 
-class SoundProcessor(DatasetItemProcessor[SoundFile, dict]):
+
+class SoundProcessor(DatasetItemProcessor[File, dict]):
     # Versioning support (when SoundProcessor gets extended this should be changed as well)
     version: ClassVar[str] = "0.0.1"
 
@@ -32,10 +34,15 @@ class SoundProcessor(DatasetItemProcessor[SoundFile, dict]):
                 print(e)
                 self.raise_permission_error('create necessary caching directories')
 
-    def cache_location(self, file: SoundFile):
+    @classmethod
+    def init(cls, cache_dir: str, version: str = "0.0.1"):
+        cls.version = version
+        return cls(cache_dir)
+
+    def cache_location(self, file: File):
         return path.join(self.cache_wd, file.identity())
 
-    def is_cached(self, file: SoundFile):
+    def is_cached(self, file: File):
         cache_location = self.cache_location(file)
         return path.exists(cache_location) and path.isdir(cache_location)
 
@@ -43,7 +50,7 @@ class SoundProcessor(DatasetItemProcessor[SoundFile, dict]):
         # TODO return cached data
         return {}
 
-    def cache(self, file: SoundFile, data: dict) -> bool | None:
+    def cache(self, file: File, data: dict) -> bool | None:
         cache_location = self.cache_location(file)
         try:
             makedirs(cache_location)
@@ -53,6 +60,7 @@ class SoundProcessor(DatasetItemProcessor[SoundFile, dict]):
         # TODO cache data accordingly (serialize stuff)
         return None
 
-    def process(self, file):
+    def process(self, file: File):
         # TODO process file and return a T
-        pass
+        with SoundFile.from_file(file) as sound:
+            pass

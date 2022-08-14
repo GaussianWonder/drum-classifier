@@ -8,6 +8,9 @@ T = TypeVar("T")
 
 
 class DatasetItemProcessor(ABC, Generic[FileT, T]):
+    def __init__(self):
+        pass
+
     @abstractmethod  # check if the FileT has anything cached
     def is_cached(self, file: FileT) -> bool:
         pass
@@ -24,7 +27,7 @@ class DatasetItemProcessor(ABC, Generic[FileT, T]):
     def process(self, file: FileT) -> T:
         pass
 
-    def handle(self, file: FileT) -> T:
+    def features(self, file: FileT) -> T:
         if self.is_cached(file):
             return self.get_cache(file)
 

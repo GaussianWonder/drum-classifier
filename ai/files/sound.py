@@ -29,15 +29,10 @@ class SoundFile(File):
 
         :return: None
         """
-        samples, sample_rate = librosa.load(
-            self.path,
-            sr=preferences.SAMPLE_RATE,
-            mono=preferences.CONVERT_TO_MONO,
-            duration=preferences.MAX_DURATION,
-        )
+        samples, sample_rate, duration = preferences.load_sound(self.path)
         self.samples = samples
         self.sample_rate = sample_rate
-        self.duration = float(len(samples)) / sample_rate
+        self.duration = duration
 
     def is_loaded(self):
         """ Check if the SoundFile instance has loaded the audio file itself. This yields true when using `with _ as _`

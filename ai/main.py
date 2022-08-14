@@ -2,9 +2,11 @@
 
 import fire  # type: ignore
 
+from files.file import File
 from files.handler import DatasetFileHandler
 from files.handler.labelling_strategies import most_significant_label
-from files.handler.file_mappings import path_to_sound
+from files.handler.file_mappings import path_to_file
+from files.processor.sound_processor import SoundProcessor
 
 
 class Main(object):
@@ -47,9 +49,10 @@ class Main(object):
 if __name__ == '__main__':
     fire.Fire(Main)
 
-    handler = DatasetFileHandler.from_cwd(
-        label_strategy=most_significant_label,
-        file_map=path_to_sound,
-    )
-    for asd in handler.get_files():
-        pass
+    # handler: DatasetFileHandler[str, File, dict] = DatasetFileHandler[str, File, dict].from_cwd(
+    #     label_strategy=most_significant_label,
+    #     file_map=path_to_file,
+    #     file_processor=SoundProcessor.init('./temp')
+    # )
+    # for asd in handler.get_files():
+    #     pass

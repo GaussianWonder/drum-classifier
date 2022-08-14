@@ -38,11 +38,8 @@ class File:
     def sha1(self):
         return self.file_hash(hashlib.sha1())
 
-    def sha256(self):
-        return self.file_hash(hashlib.sha256())
-
     def md5(self):
         return self.file_hash(hashlib.md5())
 
     def identity(self):
-        return '{}:{}:{}'.format(self.md5(), self.sha1(), self.sha256())
+        return '{}.{}'.format(self.md5(), self.sha1())
