@@ -1,4 +1,5 @@
-from typing import ClassVar, NoReturn, Any
+from shutil import rmtree
+from typing import ClassVar, NoReturn, Any, Dict
 
 import numpy as np
 from numpy import ndarray
@@ -12,9 +13,10 @@ from files.json import NpEncoder, NpDecoder
 from files.sound import SoundFile
 
 ND_ARRAY_FIELDS = ['stft', 'mfcc', 'chroma', 'chroma_cens', 'mel', 'contrast', 'spectral_bandwidth', 'tonnetz']
+SPT = Dict[str, ndarray | int | float]
 
 
-class SoundProcessor(DatasetItemProcessor[File, dict[str, ndarray]]):
+class SoundProcessor(DatasetItemProcessor[File, SPT]):
     # Versioning support (when SoundProcessor gets extended this should be changed as well)
     version: ClassVar[str] = "0.0.1"
 
@@ -62,31 +64,27 @@ class SoundProcessor(DatasetItemProcessor[File, dict[str, ndarray]]):
 
         return len(listdir(cache_location)) > 0
 
-    def get_cache(self, file) -> dict[str, ndarray]:
+    def get_cache(self, file) -> SPT:
         cache_location = self.cache_location(file)
         data_file = self.data_file(file)
-        loaded_from_data: dict[str, Any] = {}
+        from_data: dict[str, int | float] = {}
         ndarrays: dict[str, ndarray] = {}
 
         if path.exists(data_file):
             with open(data_file, 'r') as json_file:
-                data = json.load(json_file, cls=NpDecoder)
-
-                for key, value in data.items():
-                    if key in ND_ARRAY_FIELDS:
-                        # NDARRAYS in json currently works, but it might be slow for huge arrays
-                        #   because all ndarrays are huge, the JSON encoder wastes time cycling through array items
-                        #   and constructing normal arrays, just to be converted to np arrays (thankfully NOT copied)
-                        # SEE: https://numpy.org/doc/stable/reference/generated/numpy.save.html
-                        # Current performance for ndarrays in json
-                        # Uncached  0.97163947199805990s
-                        # Cached    0.07287374799852842s  <--
-                        # 92,4999189413% faster for a 4.4MiB json file
-                        loaded_from_data[key] = np.asarray(value)
-                    else:
-                        loaded_from_data[key] = value
+                from_data = json.load(json_file, cls=NpDecoder)
+                # NDARRAYS in json currently works, but it might be slow for huge arrays
+                #   because all ndarrays are huge, the JSON encoder wastes time cycling through array items
+                #   and constructing normal arrays, just to be converted to np arrays (thankfully NOT copied)
+                # SEE: https://numpy.org/doc/stable/reference/generated/numpy.save.html
+                # Current performance for ndarrays in json
+                # Uncached  0.97163947199805990s
+                # Cached    0.07287374799852842s  <--
+                # 92,4999189413% faster for a 4.4MiB json file
+                # loaded_from_data[key] = np.asarray(value)
 
         for nd_arr_field in ND_ARRAY_FIELDS:
+            ndarrays[nd_arr_field] = np.load(path.join(cache_location, '{}.npy'.format(nd_arr_field)))
             # To avoid NDARRAYS in json, provide all ndarray fields to ND_ARRAY_FIELDS
             #   that will cover both serialization and deserialization
             # All NDARRAYS must be at the root(top) level of the dictionary
@@ -99,11 +97,9 @@ class SoundProcessor(DatasetItemProcessor[File, dict[str, ndarray]]):
             # 99,7446935888% faster loading time cached, and 97,7460717377% faster load time compared to CachedJ
             # 33,7868383757% faster generation time (due to not serializing huge arrays in json when caching)
 
-            ndarrays[nd_arr_field] = np.load(path.join(cache_location, '{}.npy'.format(nd_arr_field)))
+        return {**ndarrays, **from_data}
 
-        return {**ndarrays, **loaded_from_data}
-
-    def cache(self, file: File, data: dict[str, ndarray]) -> bool | None:
+    def cache(self, file: File, data: SPT) -> bool | None:
         cache_location = self.cache_location(file)
         if not path.exists(cache_location):
             try:
@@ -112,7 +108,7 @@ class SoundProcessor(DatasetItemProcessor[File, dict[str, ndarray]]):
                 print(e)
                 self.raise_permission_error('create necessary caching directories')
         data_file = self.data_file(file)
-        remaining: dict[str, Any] = {}
+        from_data: dict[str, int | float] = {}
 
         try:
             for key, value in data.items():
@@ -122,19 +118,19 @@ class SoundProcessor(DatasetItemProcessor[File, dict[str, ndarray]]):
                         data[key],
                     )
                 else:
-                    remaining[key] = value
+                    from_data[key] = value
 
-            if len(remaining.keys()) > 0:
+            if len(from_data.keys()) > 0:
                 with open(data_file, 'w') as df:
                     json.dump(data, df, check_circular=False, cls=NpEncoder)
         except Exception as e:
             print(e)
             try:
-                remove(data_file)
+                rmtree(cache_location)
             finally:
                 return False
         return True
 
-    def process(self, file: File) -> dict[str, ndarray]:
+    def process(self, file: File) -> SPT:
         with SoundFile.from_file(file) as sound:
             return sound.features()
