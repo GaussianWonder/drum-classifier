@@ -1,6 +1,10 @@
 #!./venv/bin/python3.10
 
-import fire
+import fire  # type: ignore
+
+from files.handler import DatasetFileHandler
+from files.handler.labelling_strategies import most_significant_label
+from files.handler.file_mappings import path_to_sound
 
 
 class Main(object):
@@ -42,3 +46,10 @@ class Main(object):
 
 if __name__ == '__main__':
     fire.Fire(Main)
+
+    handler = DatasetFileHandler.from_cwd(
+        label_strategy=most_significant_label,
+        file_map=path_to_sound,
+    )
+    for asd in handler.get_files():
+        pass

@@ -1,95 +1,123 @@
 from glob import glob
 from os import path, getcwd, listdir
-from typing import Generic, TypeVar, Callable
+from typing import Type, TypeVar, Generic, Callable
+
+from files.processor import DatasetItemProcessor
 
 # Self type (DatasetFileHandler)
-from files.sound import SoundFile
-from files.handler.labelling_strategies import most_significant_label
-
 SelfDFH = TypeVar("SelfDFH", bound="DatasetFileHandler")
 # The label type returned by the labelling strategy
 LabelT = TypeVar("LabelT")
-# Labelling strategy function type: (FilePath, AssetPath -> LabelType)
-LabelStrategyT = Callable[[str, str], LabelT]
+# The File type that paths are mapped to
+FileT = TypeVar("FileT")
+# The data type that the processing unit yields
+T = TypeVar("T")
 
 
-class DatasetFileHandler(Generic[LabelT]):
+# TODO: get_paths and get_paths_per_category should be optional stripped from this file
+# ie: other ways of fetching file paths exist (from serialized documents / http requests)
+# this specific implementation of finding files should be stripped away (like labelling strategies and file mappings)
+
+
+class DatasetFileHandler(Generic[LabelT, FileT, T]):
+    # Type ignores exist mostly because mypy does not support alias for a generic type bound to some typevars
     base_path: str = getcwd()
-    label_strategy: LabelStrategyT
     categories: list[str]
 
-    def __init__(self: SelfDFH, base_path: str, label_strategy: LabelStrategyT):
+    label_strategy: Callable[[str, str], LabelT]
+    file_map: Callable[[str], FileT]
+    file_processor: Type[DatasetItemProcessor[FileT, T]]
+
+    def __init__(
+            self: SelfDFH,
+            base_path: str,
+            label_strategy: Callable[[str, str], LabelT],
+            file_map: Callable[[str], FileT],
+            file_processor: Type[DatasetItemProcessor[FileT, T]],
+    ):
         if not path.exists(base_path) or not path.isdir(base_path):
             raise Exception('Folder {} does not exist!'.format(base_path))
-        self.label_strategy = label_strategy
+
+        self.label_strategy = label_strategy  # type: ignore
+        self.file_map = file_map  # type: ignore
+        self.file_processor = file_processor
+
         self.base_path = base_path
         self.categories = self.get_categories()
-        self.categories.sort()
+        self.categories.sort()  # for compatibility check
 
     @classmethod
-    def from_cwd(cls, label_strategy: Callable[[str, str], LabelT] = most_significant_label):
-        return cls(getcwd(), label_strategy)
+    def from_cwd(
+            cls,
+            label_strategy: Callable[[str, str], LabelT],
+            file_map: Callable[[str], FileT],
+            file_processor: Type[DatasetItemProcessor[FileT, T]],
+    ):
+        return cls(getcwd(), label_strategy, file_map, file_processor)
 
     @classmethod
-    def for_folder(cls, folder: str | None = None, label_strategy: LabelStrategyT = most_significant_label):
+    def for_folder(
+            cls,
+            folder: str | None,
+            label_strategy: Callable[[str, str], LabelT],
+            file_map: Callable[[str], FileT],
+            file_processor: Type[DatasetItemProcessor[FileT, T]],
+    ):
         if folder is None:
-            return cls.from_cwd(label_strategy)
-        return cls(folder, label_strategy)
+            return cls.from_cwd(label_strategy, file_map, file_processor)
+        return cls(folder, label_strategy, file_map, file_processor)
 
     def get_categories(self) -> list[str]:
         return get_asset_categories(self.base_path)
 
-    def get_files(self) -> list[tuple[str, str, LabelT]]:
-        """Get all paths with associated category and labels
+    def get_paths(self) -> list[tuple[str, str, LabelT]]:
+        """Get all paths with associated category and LabelT
 
-        :return: A huge list of (category, sound_path, labels)
+        :return: A huge list of (category, FileT, LabelT)
         """
         return [
-            (category, p, self.label_strategy(p, self.base_path))
+            (category, p, self.label_strategy(p, self.base_path))  # type: ignore
             for (category, p) in get_files(self.base_path, self.categories)
         ]
 
-    def get_sounds(self) -> list[tuple[str, SoundFile, LabelT]]:
-        """Get all SoundFiles with associated category and labels
+    def get_files(self) -> list[tuple[str, FileT, LabelT]]:
+        """Get all FileT with associated category and LabelT
 
-        :return: A huge list of (category, sound, labels)
+        :return: A huge list of (category, FileT, LabelT)
         """
         return [
-            (category, SoundFile(p), self.label_strategy(p, self.base_path))
+            (category, self.file_map(p), self.label_strategy(p, self.base_path))  # type: ignore
             for (category, p) in get_files(self.base_path, self.categories)
         ]
 
-    def get_files_per_category(self) -> list[tuple[str, list[tuple[str, LabelT]]]]:
-        """Convert paths to tuples (path, labels) provided by the labelling strategy
+    def get_paths_per_category(self) -> list[tuple[str, list[tuple[str, LabelT]]]]:
+        """Convert paths to tuples (path, LabelT) provided by the labelling strategy and file mapper
 
         :return: List of paths with associated labels grouped by category
         """
         return [
             (
                 category,
-                [(p, self.label_strategy(p, self.base_path)) for p in paths]
+                [(p, self.label_strategy(p, self.base_path)) for p in paths]  # type: ignore
             )
             for (category, paths) in get_paths(self.base_path, self.categories)
         ]
 
-    def get_sounds_per_category(self):
-        """Convert paths to tuples (SoundFile, labels) provided by the labelling strategy
+    def get_files_per_category(self):
+        """Convert paths to tuples (FileT, LabelT) provided by the labelling strategy and file mapper
 
         :return: List of SoundFiles with associated labels grouped by category
         """
         return [
             (
                 category,
-                [(SoundFile.from_path(p), self.label_strategy(p, self.base_path)) for p in paths]
+                [(self.file_map(p), self.label_strategy(p, self.base_path)) for p in paths]
             )
             for (category, paths) in get_paths(self.base_path, self.categories)
         ]
 
     def is_compatible_with(self: SelfDFH, other: SelfDFH) -> bool:
-        try:
-            return self.categories == other.categories
-        finally:
-            return False
+        return self.categories == other.categories
 
 
 def get_asset_categories(asset_path: str) -> list[str]:

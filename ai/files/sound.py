@@ -1,4 +1,4 @@
-import librosa
+import librosa  # type: ignore
 
 import preferences
 from files.file import File
@@ -7,11 +7,11 @@ from numpy import number, ndarray
 
 class SoundFile(File):
     # soundfile data
-    samples: ndarray = []
-    sample_rate: number = None
+    samples: ndarray
+    sample_rate: int = 0
 
     # Relevant info
-    duration: number = None
+    duration: int = 0
 
     def __init__(self, path: str):
         super().__init__(path)
@@ -44,7 +44,7 @@ class SoundFile(File):
 
         :return: bool
         """
-        return not(self.duration is None or self.sample_rate is None or not self.samples or not len(self.samples) == 0)
+        return not(self.duration is 0 or self.sample_rate is 0 or not hasattr(self, 'samples'))
 
     def __enter__(self):
         self.load_sound()

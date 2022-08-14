@@ -19,17 +19,17 @@ class File:
         self.name = name
         self.ext = ext
 
-    def chunk_reducer(self, reducer: Callable[[T, AnyStr], T], init: T, chunk_size: int = 1024) -> T:
+    def chunk_reducer(self, reducer: Callable[[T, AnyStr | str | bytes], T], init: T, chunk_size: int = 1024) -> T:
         next_iter: T = init
         with open(self.path, 'rb') as file:
-            chunk: AnyStr = b'?'
+            chunk: AnyStr | str | bytes = b'?'
             while chunk != b'':
                 chunk = file.read(chunk_size)
                 next_iter = reducer(next_iter, chunk)
         return next_iter
 
     def file_hash(self, hash_function) -> str:
-        reduced = self.chunk_reducer(
+        reduced = self.chunk_reducer(  # type: ignore
             reducer=lambda hasher, chunk: hasher.update(chunk),
             init=hash_function
         )
