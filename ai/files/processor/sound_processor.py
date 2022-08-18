@@ -13,7 +13,11 @@ from files.json import NpEncoder, NpDecoder
 from files.sound import SoundFile
 
 ND_ARRAY_FIELDS = ['stft', 'mfcc', 'chroma', 'chroma_cens', 'mel', 'contrast', 'spectral_bandwidth', 'tonnetz']
-SPT = Dict[str, ndarray | int | float]
+
+BaseVals = int | float | list[int] | list[float]
+DictBaseVals = Dict[str, BaseVals]
+NestedBaseVals = Dict[str, BaseVals | DictBaseVals]
+SPT = Dict[str, ndarray | BaseVals | DictBaseVals]
 
 # TODO see np.load and np.save, maybe `allow_pickle` should be False someday
 
@@ -114,14 +118,14 @@ class SoundProcessor(DatasetItemProcessor[File, SPT]):
                 print(e)
                 self.raise_permission_error('create necessary caching directories')
         data_file = self.data_file(file)
-        from_data: dict[str, int | float] = {}
+        from_data: NestedBaseVals = {}
 
         try:
             for key, value in data.items():
                 if isinstance(value, ndarray):
                     np.save(
                         path.join(cache_location, '{}.npy'.format(key)),
-                        data[key],
+                        value,
                     )
                 else:
                     from_data[key] = value
