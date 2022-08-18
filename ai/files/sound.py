@@ -85,6 +85,9 @@ class SoundFile(File):
             'info': {
                 'sample_rate': self.sample_rate,
                 'duration': self.duration,
+                'name': self.name,
+                'ext': self.ext,
+                'path': self.path,
             },
             'stft': stft,
             'mfcc': mfcc,
