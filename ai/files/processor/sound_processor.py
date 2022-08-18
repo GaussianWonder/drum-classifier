@@ -1,19 +1,24 @@
+import librosa  # type: ignore
+import librosa.display  # type: ignore
+from matplotlib import pyplot as plt  # type: ignore
+
 from shutil import rmtree
 from typing import ClassVar, NoReturn, Dict
+from os import path, makedirs
+import json
 
 import numpy as np
 from numpy import ndarray
 
 from files.processor import DatasetItemProcessor
 from files.file import File
-from os import path, makedirs, listdir
-import json
 
 from files.json import NpEncoder, NpDecoder
+from files.processor.typings import SPT, NestedBaseVals
 from files.sound import SoundFile
 
 ND_ARRAY_FIELDS = ['stft', 'mfcc', 'chroma', 'chroma_cens', 'mel', 'contrast', 'spectral_bandwidth', 'tonnetz']
-SPT = Dict[str, ndarray | int | float]
+
 
 # TODO see np.load and np.save, maybe `allow_pickle` should be False someday
 
@@ -36,11 +41,11 @@ class SoundProcessor(DatasetItemProcessor[File, SPT]):
     def cache_working_directory(self, cache_dir: str):
         return path.join(cache_dir, self.version)
 
-    def __init__(self, cache_dir: str, cache_plots: bool = False):
+    def __init__(self, cache_dir: str, cache_plots: bool):
         super().__init__()
         self.cache_dir = cache_dir
         self.cache_wd = self.cache_working_directory(cache_dir)
-        self.cache_plots = cache_plots  # TODO plot and cache all plots
+        self.cache_plots = cache_plots
         if not path.exists(self.cache_wd) or not path.isdir(self.cache_wd):
             try:
                 makedirs(self.cache_wd)
@@ -49,16 +54,64 @@ class SoundProcessor(DatasetItemProcessor[File, SPT]):
                 self.raise_permission_error('create necessary caching directories')
 
     @classmethod
-    def init(cls, cache_dir: str, version: str = "0.0.1"):
+    def init(cls, cache_dir: str, cache_plots: bool = False, version: str = "0.0.1"):
         cls.version = version
-        return cls(cache_dir)
+        return cls(cache_dir, cache_plots)
 
     def cache_location(self, file: File):
         return path.join(self.cache_wd, file.identity)
 
+    def plot_location(self, file: File):
+        return path.join(self.cache_location(file), 'plots')
+
     def data_file(self, file: File):
         return path.join(self.cache_location(file), 'data.json')
 
+    def plot_files(self, file: File):
+        plot_location = self.plot_location(file)
+        return [path.join(plot_location, '{}.png'.format(p)) for p in ND_ARRAY_FIELDS]
+
+    def are_plots_cached(self, file: File):
+        plot_location = self.plot_location(file)
+        if not path.exists(plot_location):
+            return False
+
+        return all([path.exists(p) and path.isfile(p) for p in self.plot_files(file)])
+
+    def nd_array_files(self, file: File):
+        cache_location = self.cache_location(file)
+        return [path.join(cache_location, '{}.npy'.format(p)) for p in ND_ARRAY_FIELDS]
+
+    def cache_plot_files(self, file: File, data: SPT):
+        plot_location = self.plot_location(file)
+        if not path.exists(plot_location):
+            try:
+                makedirs(plot_location)
+                makedirs(path.join(plot_location, 'amp_to_db'))
+                # makedirs(path.join(plot_location, 'log_pow'))
+            except Exception as e:
+                print(e)
+                self.raise_permission_error('create necessary caching directories')
+
+        sr = data['info']['sample_rate']  # type: ignore
+        for plot_key in ND_ARRAY_FIELDS:
+            plot_and_save(
+                data=data[plot_key],
+                sr=sr,
+                file_path=path.join(plot_location, '{}.png'.format(plot_key)),
+            )
+            plot_and_save(
+                data=librosa.amplitude_to_db(data[plot_key], ref=np.max),
+                sr=sr,
+                file_path=path.join(plot_location, 'amp_to_db', '{}.png'.format(plot_key)),
+            )
+            # plot_and_save(
+            #     data=librosa.power_to_db(data[plot_key]**2, ref=np.max),  # type: ignore
+            #     sr=sr,
+            #     file_path=path.join(plot_location, 'log_pow', '{}.png'.format(plot_key)),
+            # )
+
+    # ABSTRACT METHODS IMPL
     def is_cached(self, file: File):
         cache_location = self.cache_location(file)
         if not path.exists(cache_location):
@@ -68,7 +121,7 @@ class SoundProcessor(DatasetItemProcessor[File, SPT]):
         if path.exists(data_file) and not path.isfile(data_file):
             return False
 
-        return len(listdir(cache_location)) > 0
+        return all([path.exists(p) and path.isfile(p) for p in self.nd_array_files(file)])
 
     def get_cache(self, file) -> SPT:
         cache_location = self.cache_location(file)
@@ -114,21 +167,24 @@ class SoundProcessor(DatasetItemProcessor[File, SPT]):
                 print(e)
                 self.raise_permission_error('create necessary caching directories')
         data_file = self.data_file(file)
-        from_data: dict[str, int | float] = {}
+        from_data: NestedBaseVals = {}
 
         try:
             for key, value in data.items():
                 if isinstance(value, ndarray):
                     np.save(
                         path.join(cache_location, '{}.npy'.format(key)),
-                        data[key],
+                        value,
                     )
                 else:
                     from_data[key] = value
 
             if len(from_data.keys()) > 0:
                 with open(data_file, 'w') as df:
-                    json.dump(data, df, check_circular=False, cls=NpEncoder)
+                    json.dump(from_data, df, check_circular=False, cls=NpEncoder)
+
+            if self.cache_plots:
+                pass
         except Exception as e:
             print(e)
             try:
@@ -140,3 +196,22 @@ class SoundProcessor(DatasetItemProcessor[File, SPT]):
     def process(self, file: File) -> SPT:
         with SoundFile.from_file(file) as sound:
             return sound.features()
+
+    # Override method to accommodate for plot caching
+    def features(self, file: File) -> SPT:
+        data: SPT = super().features(file)
+
+        if self.cache_plots and not self.are_plots_cached(file):
+            self.cache_plot_files(file, data)
+
+        return data
+
+
+def plot_and_save(data, sr, file_path):
+    fig, ax = plt.subplots()
+    librosa.display.specshow(
+        data,
+        sr=sr,
+        ax=ax
+    )
+    plt.savefig(file_path)

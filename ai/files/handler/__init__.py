@@ -67,6 +67,12 @@ class DatasetFileHandler(Generic[LabelT, FileT, T]):
             return cls.from_cwd(label_strategy, file_map, file_processor)
         return cls(folder, label_strategy, file_map, file_processor)
 
+    def cache_all(self):
+        for (_, files) in self.get_files_per_category():
+            for (file, _) in files:
+                if not self.file_processor.is_cached(file):
+                    self.file_processor.features(file)
+
     def get_categories(self) -> list[str]:
         return get_asset_categories(self.base_path)
 
@@ -103,7 +109,7 @@ class DatasetFileHandler(Generic[LabelT, FileT, T]):
             for (category, paths) in get_paths(self.base_path, self.categories)
         ]
 
-    def get_files_per_category(self):
+    def get_files_per_category(self) -> list[tuple[str, list[tuple[FileT, LabelT]]]]:
         """Convert paths to tuples (FileT, LabelT) provided by the labelling strategy and file mapper
 
         :return: List of SoundFiles with associated labels grouped by category
@@ -111,7 +117,7 @@ class DatasetFileHandler(Generic[LabelT, FileT, T]):
         return [
             (
                 category,
-                [(self.file_map(p), self.label_strategy(p, self.base_path)) for p in paths]
+                [(self.file_map(p), self.label_strategy(p, self.base_path)) for p in paths]  # type: ignore
             )
             for (category, paths) in get_paths(self.base_path, self.categories)
         ]

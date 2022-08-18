@@ -35,3 +35,8 @@ class DatasetItemProcessor(ABC, Generic[FileT, T]):
         self.cache(file, data)
 
         return data
+
+    def cache_if_uncached(self, file: FileT):
+        if not self.is_cached(file):
+            data: T = self.process(file)
+            self.cache(file, data)

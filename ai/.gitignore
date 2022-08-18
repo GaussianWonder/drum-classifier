@@ -9,3 +9,4 @@ __pycache__/
 venv/
 split_transient.py
 .mypy_cache/*
+cached/

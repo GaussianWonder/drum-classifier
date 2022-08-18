@@ -1,4 +1,4 @@
-from os import path as opath
+from os import path as opath, remove
 import hashlib
 from typing import TypeVar, Callable, AnyStr
 
@@ -18,7 +18,7 @@ class File:
             raise Exception('File {} is not actually a file!'.format(path))
 
         self.path = path
-        name, ext = opath.splitext(path)
+        name, ext = opath.splitext(opath.basename(path))
         self.name = name
         self.ext = ext
         self.identity = self.calculate_identity()
@@ -47,6 +47,9 @@ class File:
 
     def calculate_identity(self):
         return '{}.{}'.format(self.md5(), self.sha1())
+
+    def delete(self):
+        remove(self.path)
 
 
 def hash_reducer(hasher, chunk):
