@@ -90,9 +90,6 @@ class SoundFile(File):
             'tonnetz': tonnetz,
         }
 
-    def plot(self, features: dict[str, ndarray]):
-        pass
-
     def __enter__(self):
         self.load_sound()
         return self
