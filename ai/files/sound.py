@@ -3,7 +3,9 @@ import numpy as np
 
 import preferences
 from files.file import File
-from numpy import number, ndarray
+from numpy import ndarray
+
+from files.processor.typings import SPT
 
 
 class SoundFile(File):
@@ -42,7 +44,7 @@ class SoundFile(File):
         """
         return not(self.duration <= 0 or self.sample_rate <= 0 or not hasattr(self, 'samples'))
 
-    def features(self) -> dict[str, ndarray]:
+    def features(self) -> SPT:
         stft: ndarray = np.abs(librosa.stft(self.samples))
 
         mfcc: ndarray = librosa.feature.mfcc(
@@ -80,6 +82,10 @@ class SoundFile(File):
         )
 
         return {
+            'info': {
+                'sample_rate': self.sample_rate,
+                'duration': self.duration,
+            },
             'stft': stft,
             'mfcc': mfcc,
             'chroma': chroma,

@@ -4,11 +4,11 @@ import fire  # type: ignore
 import time
 
 from files.file import File
-from files.handler import DatasetFileHandler
-from files.handler.labelling_strategies import most_significant_label
-from files.handler.file_mappings import path_to_file
+# from files.handler import DatasetFileHandler
+# from files.handler.labelling_strategies import most_significant_label
+# from files.handler.file_mappings import path_to_file
 from files.processor.sound_processor import SoundProcessor
-from files.sound import SoundFile
+# from files.sound import SoundFile
 
 
 class Main(object):
@@ -53,22 +53,22 @@ if __name__ == '__main__':
 
     # fire.Fire(Main)
 
-    # processor = SoundProcessor.init('./temp')
-    # file = File('./temp/weird.mp3')
-    #
-    # no_cache_t = time.perf_counter()
-    # features = processor.features(file)
-    # no_cache_t_end = time.perf_counter()
-    # no_cache_t_elapse = no_cache_t_end - no_cache_t
-    #
-    # cache_t = time.perf_counter()
-    # cached_features = processor.features(file)
-    # cache_t_end = time.perf_counter()
-    # cache_t_elapse = time.perf_counter() - cache_t
-    #
-    # print('Uncached {}s\nCached {}s'.format(no_cache_t_elapse, cache_t_elapse))
-    # print(features)
-    # print(cached_features)
+    processor = SoundProcessor.init('./temp', cache_plots=True)
+    file = File('./temp/weird.mp3')
+
+    no_cache_t = time.perf_counter()
+    features = processor.features(file)
+    no_cache_t_end = time.perf_counter()
+    no_cache_t_elapse = no_cache_t_end - no_cache_t
+
+    cache_t = time.perf_counter()
+    cached_features = processor.features(file)
+    cache_t_end = time.perf_counter()
+    cache_t_elapse = time.perf_counter() - cache_t
+
+    print('Uncached {}s\nCached {}s'.format(no_cache_t_elapse, cache_t_elapse))
+    print(features)
+    print(cached_features)
 
     # with SoundFile.from_path('./temp/weird.mp3') as sound:
     #     print(sound.identity)
