@@ -41,7 +41,7 @@ class SoundProcessor(DatasetItemProcessor[File, SPT]):
     def cache_working_directory(self, cache_dir: str):
         return path.join(cache_dir, self.version)
 
-    def __init__(self, cache_dir: str, cache_plots: bool = False):
+    def __init__(self, cache_dir: str, cache_plots: bool):
         super().__init__()
         self.cache_dir = cache_dir
         self.cache_wd = self.cache_working_directory(cache_dir)

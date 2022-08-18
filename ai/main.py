@@ -53,22 +53,22 @@ if __name__ == '__main__':
 
     # fire.Fire(Main)
 
-    processor = SoundProcessor.init('./temp', cache_plots=True)
-    file = File('./temp/weird.mp3')
-
-    no_cache_t = time.perf_counter()
-    features = processor.features(file)
-    no_cache_t_end = time.perf_counter()
-    no_cache_t_elapse = no_cache_t_end - no_cache_t
-
-    cache_t = time.perf_counter()
-    cached_features = processor.features(file)
-    cache_t_end = time.perf_counter()
-    cache_t_elapse = time.perf_counter() - cache_t
-
-    print('Uncached {}s\nCached {}s'.format(no_cache_t_elapse, cache_t_elapse))
-    print(features)
-    print(cached_features)
+    # processor = SoundProcessor.init('./temp', cache_plots=True)
+    # file = File('./temp/weird.mp3')
+    #
+    # no_cache_t = time.perf_counter()
+    # features = processor.features(file)
+    # no_cache_t_end = time.perf_counter()
+    # no_cache_t_elapse = no_cache_t_end - no_cache_t
+    #
+    # cache_t = time.perf_counter()
+    # cached_features = processor.features(file)
+    # cache_t_end = time.perf_counter()
+    # cache_t_elapse = time.perf_counter() - cache_t
+    #
+    # print('Uncached {}s\nCached {}s'.format(no_cache_t_elapse, cache_t_elapse))
+    # print(features)
+    # print(cached_features)
 
     # with SoundFile.from_path('./temp/weird.mp3') as sound:
     #     print(sound.identity)
