@@ -5,6 +5,8 @@ import fire  # type: ignore
 from files.file import File
 from files.handler.sound_handler import sound_handler
 from files.processor.sound_processor import SoundProcessor
+from files.processor.utils import split_by_transients_if_applicable, transients, plot_transients
+from files.sound import SoundFile
 
 
 class Main(object):
@@ -69,4 +71,19 @@ class Main(object):
 
 
 if __name__ == '__main__':
-    fire.Fire(Main)
+    # fire.Fire(Main)
+
+    with SoundFile.from_path('./temp/4hits_no_last_click.wav') as sound:
+        pass
+        # files = split_by_transients_if_applicable(
+        #     sound=sound,
+        #     new_folder=True,
+        #     remove_original_if_split=False,
+        # )
+        # print(len(files))
+
+        # energy, raw_onsets, backtracked_onsets = transients(
+        #     y=sound.samples,
+        #     sr=sound.sample_rate,
+        # )
+        # plot_transients(energy, raw_onsets, backtracked_onsets)
