@@ -107,8 +107,6 @@ def transients(
         onset_strength: ndarray | None = None,
         normalize: bool = True,
 ) -> tuple[ndarray, ndarray, ndarray]:
-    # TODO look into these
-    # librosa.util.fix_length           https://librosa.org/doc/main/generated/librosa.util.fix_length.html
     onset_strength_env = onset_strength if onset_strength is not None else librosa.onset.onset_strength(
         y=y,
         sr=sr,
