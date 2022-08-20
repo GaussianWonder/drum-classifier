@@ -5,7 +5,6 @@ from numpy import ndarray
 
 # CONSTANTS
 CONVERT_TO_MONO = True
-MAX_DURATION = 2  # in seconds
 
 N_MFCC = 20
 
@@ -24,6 +23,5 @@ def load_sound(file_path: str) -> tuple[ndarray, int, int]:
         file_path,
         sr=SAMPLE_RATE,
         mono=CONVERT_TO_MONO,
-        duration=MAX_DURATION,
     )
     return librosa.util.normalize(samples), sample_rate, float(len(samples)) / sample_rate
