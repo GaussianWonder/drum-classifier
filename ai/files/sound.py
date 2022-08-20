@@ -14,7 +14,7 @@ class SoundFile(File):
     sample_rate: int = 0
 
     # Relevant info
-    duration: int = 0
+    duration: float = 0
 
     def __init__(self, path: str):
         super().__init__(path)
@@ -32,7 +32,7 @@ class SoundFile(File):
 
         :return: None
         """
-        samples, sample_rate, duration = preferences.load_sound(self.path)
+        (samples, sample_rate, duration) = preferences.load_sound(self.path)
         self.samples = samples
         self.sample_rate = sample_rate
         self.duration = duration

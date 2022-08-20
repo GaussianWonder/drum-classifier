@@ -13,7 +13,7 @@ SAMPLE_RATE = 44100
 # DEFAULT IMPLEMENTATIONS
 
 
-def load_sound(file_path: str) -> tuple[ndarray, int, int]:
+def load_sound(file_path: str) -> tuple[ndarray, int, float]:
     """A uniform way to load and start processing sounds. Fixed sample_rate, fixed length,
 
     :param file_path: Path to the desired file to load
@@ -24,4 +24,4 @@ def load_sound(file_path: str) -> tuple[ndarray, int, int]:
         sr=SAMPLE_RATE,
         mono=CONVERT_TO_MONO,
     )
-    return librosa.util.normalize(samples), sample_rate, float(len(samples)) / sample_rate
+    return librosa.util.normalize(samples), sample_rate, librosa.get_duration(y=samples, sr=sample_rate)
