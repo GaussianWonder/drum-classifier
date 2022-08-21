@@ -34,5 +34,6 @@ def load_sound(file_path: str) -> tuple[ndarray, int, float]:
         y=librosa.util.normalize(samples),
         top_db=SILENCE_DB,
     )
+    # DO NOT fix_length here. Fix the length of the samples before feature extraction
 
     return trimmed_silence, sample_rate, librosa.get_duration(y=trimmed_silence, sr=sample_rate)

@@ -173,7 +173,7 @@ def split_by_transients(
     # Get sample indexes of each onset frame
     new_paths: list[str] = []
     sample_indexes = np.concatenate(
-        list(librosa.frames_to_samples(backtracked_onsets)),
+        librosa.frames_to_samples(backtracked_onsets),
         len(sound.samples),
     )
     index_count = len(sample_indexes)
@@ -190,22 +190,24 @@ def split_by_transients(
             '{}_{}{}'.format(sound.name, i, sound.ext)
         )
 
-        # Fade out the clip's right edge
-        fadeout(y=audio, sr=sound.sample_rate, duration=0.01)
+        if librosa.get_duration(y=audio, sr=sound.sample_rate) > preferences.MAX_DURATION:
+            # Fix the duration of the audio file only if larger than the max accepted duration
+            audio = librosa.util.fix_length(
+                data=audio,
+                size=sample_len(
+                    sr=sound.sample_rate,
+                    duration=preferences.MAX_DURATION
+                ),
+            )
 
-        # Fix the audio file sample length by duration
-        uniform_audio = librosa.util.fix_length(
-            data=audio,
-            size=sample_len(
-                sr=sound.sample_rate,
-                duration=preferences.MAX_DURATION,
-            ),
+        fade_edges(
+            y=audio,
+            sr=sound.sample_rate,
+            fadein_duration=0.005,
+            fadeout_duration=0.01,
         )
 
-        # Fade in the clip's left edge
-        fadein(y=uniform_audio, sr=sound.sample_rate)
-
-        write_sound(audio_path, uniform_audio, sound.sample_rate)
+        write_sound(audio_path, audio, sound.sample_rate)
         new_paths.append(audio_path)
 
         i += 1
@@ -220,7 +222,6 @@ def split_by_transients_if_applicable(
         remove_original_if_split: bool = True,
         new_folder: bool = False,
 ) -> list[File]:
-    # TODO improve applicability detection. This process take a long time
     if sound.duration < preferences.MAX_DURATION:
         return [sound]
 

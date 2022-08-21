@@ -1,4 +1,5 @@
 import librosa  # type: ignore
+from librosa.util import fix_length  # type: ignore
 import numpy as np
 
 import preferences
@@ -45,10 +46,15 @@ class SoundFile(File):
         return not(self.duration <= 0 or self.sample_rate <= 0 or not hasattr(self, 'samples'))
 
     def features(self) -> SPT:
-        stft: ndarray = np.abs(librosa.stft(self.samples))
+        # Fix the length of the audio time series, for uniform features across all samples
+        y = fix_length(
+            data=self.samples,
+            size=int(self.sample_rate * preferences.MAX_DURATION),
+        )
+        stft: ndarray = np.abs(librosa.stft(y))
 
         mfcc: ndarray = librosa.feature.mfcc(
-            y=self.samples,
+            y=y,
             sr=self.sample_rate,
             n_mfcc=preferences.N_MFCC,
         )
@@ -58,12 +64,12 @@ class SoundFile(File):
             sr=self.sample_rate,
         )
         chroma_cens: ndarray = librosa.feature.chroma_cens(
-            y=self.samples,
+            y=y,
             sr=self.sample_rate
         )
 
         mel: ndarray = librosa.feature.melspectrogram(
-            y=self.samples,
+            y=y,
             sr=self.sample_rate,
         )
 
@@ -72,12 +78,12 @@ class SoundFile(File):
             sr=self.sample_rate,
         )
         spectral_bandwidth: ndarray = librosa.feature.spectral_bandwidth(
-            y=self.samples,
+            y=y,
             sr=self.sample_rate,
         )
 
         tonnetz: ndarray = librosa.feature.tonnetz(
-            y=librosa.effects.harmonic(self.samples),
+            y=librosa.effects.harmonic(y),
             sr=self.sample_rate,
         )
 
@@ -85,6 +91,7 @@ class SoundFile(File):
             'info': {
                 'sample_rate': self.sample_rate,
                 'duration': self.duration,
+                'processed_duration': preferences.MAX_DURATION,
                 'name': self.name,
                 'ext': self.ext,
                 'path': self.path,
