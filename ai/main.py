@@ -72,15 +72,19 @@ class Main(object):
 
 if __name__ == '__main__':
     # fire.Fire(Main)
+    # /home/virghi/Documents/facultate/licenta/project/ai/temp/4hits_no_last_click/4hits_no_last_click_2.wav
 
-    with SoundFile.from_path('./temp/4hits_no_last_click.wav') as sound:
+    # with SoundFile.from_path('/home/virghi/Documents/facultate/licenta/project/ai/temp/4hits_no_last_click/4hits_no_last_click_2.wav') as sound:
+    #     print(len(sound.samples), sound.duration)
+
+    with SoundFile.from_path('./temp/multi_real_kick_drum.wav') as sound:
         pass
-        # files = split_by_transients_if_applicable(
-        #     sound=sound,
-        #     new_folder=True,
-        #     remove_original_if_split=False,
-        # )
-        # print(len(files))
+        #     files = split_by_transients_if_applicable(
+        #         sound=sound,
+        #         new_folder=True,
+        #         remove_original_if_split=False,
+        #     )
+        #     print(len(files))
 
         # energy, raw_onsets, backtracked_onsets = transients(
         #     y=sound.samples,
