@@ -3,13 +3,14 @@ import librosa.display  # type: ignore
 from matplotlib import pyplot as plt  # type: ignore
 
 from shutil import rmtree
-from typing import ClassVar, NoReturn, Dict
+from typing import ClassVar, NoReturn
 from os import path, makedirs
 import json
 
 import numpy as np
 from numpy import ndarray
 
+import preferences
 from files.processor import DatasetItemProcessor
 from files.file import File
 
@@ -17,6 +18,7 @@ from files.json import NpEncoder, NpDecoder
 from files.processor.typings import SPT, NestedBaseVals
 from files.sound import SoundFile
 
+# TODO pick relevant features
 ND_ARRAY_FIELDS = ['stft', 'mfcc', 'chroma', 'chroma_cens', 'mel', 'contrast', 'spectral_bandwidth', 'tonnetz']
 
 
@@ -208,6 +210,7 @@ class SoundProcessor(DatasetItemProcessor[File, SPT]):
 
 
 def plot_and_save(data, sr, file_path):
+    # TODO handle different types of plots
     fig, ax = plt.subplots()
     librosa.display.specshow(
         data,

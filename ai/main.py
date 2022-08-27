@@ -5,6 +5,8 @@ import fire  # type: ignore
 from files.file import File
 from files.handler.sound_handler import sound_handler
 from files.processor.sound_processor import SoundProcessor
+from files.processor.utils import split_by_transients_if_applicable, transients, plot_transients
+from files.sound import SoundFile
 
 
 class Main(object):
@@ -17,7 +19,10 @@ class Main(object):
         :param plots: consider generating plots or not
         :returns: nothing. all data can be traced back from the cache directory
         """
-        sound_handler(assets=assets, cache=cache, plots=plots).cache_all()
+        handler = sound_handler(assets=assets, cache=cache, plots=plots)
+        # Transient split can be handled only when processing files with caching in mind
+        handler.split_transients()
+        handler.cache_all()
 
     @staticmethod
     def process(file_path: str, cache_dir: str = './cached', plots: bool = False, discard: bool = False):
@@ -69,4 +74,23 @@ class Main(object):
 
 
 if __name__ == '__main__':
-    fire.Fire(Main)
+    # fire.Fire(Main)
+    # /home/virghi/Documents/facultate/licenta/project/ai/temp/4hits_no_last_click/4hits_no_last_click_2.wav
+
+    # with SoundFile.from_path('/home/virghi/Documents/facultate/licenta/project/ai/temp/4hits_no_last_click/4hits_no_last_click_2.wav') as sound:
+    #     print(len(sound.samples), sound.duration)
+
+    with SoundFile.from_path('./temp/multi_real_kick_drum.wav') as sound:
+        pass
+        #     files = split_by_transients_if_applicable(
+        #         sound=sound,
+        #         new_folder=True,
+        #         remove_original_if_split=False,
+        #     )
+        #     print(len(files))
+
+        # energy, raw_onsets, backtracked_onsets = transients(
+        #     y=sound.samples,
+        #     sr=sound.sample_rate,
+        # )
+        # plot_transients(energy, raw_onsets, backtracked_onsets)

@@ -68,10 +68,10 @@ class DatasetFileHandler(Generic[LabelT, FileT, T]):
         return cls(folder, label_strategy, file_map, file_processor)
 
     def cache_all(self):
-        for (_, files) in self.get_files_per_category():
-            for (file, _) in files:
-                if not self.file_processor.is_cached(file):
-                    self.file_processor.features(file)
+        for _, files in self.get_files_per_category():
+            for file, _ in files:
+                if not self.file_processor.is_cached(file):  # type: ignore
+                    self.file_processor.features(file)  # type: ignore
 
     def get_categories(self) -> list[str]:
         return get_asset_categories(self.base_path)
