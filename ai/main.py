@@ -19,7 +19,10 @@ class Main(object):
         :param plots: consider generating plots or not
         :returns: nothing. all data can be traced back from the cache directory
         """
-        sound_handler(assets=assets, cache=cache, plots=plots).cache_all()
+        handler = sound_handler(assets=assets, cache=cache, plots=plots)
+        # Transient split can be handled only when processing files with caching in mind
+        handler.split_transients()
+        handler.cache_all()
 
     @staticmethod
     def process(file_path: str, cache_dir: str = './cached', plots: bool = False, discard: bool = False):

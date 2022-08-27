@@ -215,6 +215,22 @@ def split_by_transients(
     return [File(p) for p in new_paths]
 
 
+def applicable_for_transient_split(
+        file_path: str | None = None,
+        sound: SoundFile | None = None,
+):
+    if file_path is None and sound is None:
+        raise Exception('At least on argument must be provided!')
+
+    duration: float = 0.0
+    if sound is not None:
+        duration = sound.duration
+    else:
+        duration = librosa.get_duration(filename=file_path)
+
+    return duration > preferences.MAX_DURATION
+
+
 def split_by_transients_if_applicable(
         sound: SoundFile,
         onset_strength: ndarray | None = None,
@@ -222,7 +238,7 @@ def split_by_transients_if_applicable(
         remove_original_if_split: bool = True,
         new_folder: bool = False,
 ) -> list[File]:
-    if sound.duration < preferences.MAX_DURATION:
+    if not applicable_for_transient_split(sound=sound):
         return [sound]
 
     if remove_original_if_split:
